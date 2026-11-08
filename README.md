@@ -1,5 +1,4 @@
-# Polling App
-
+# VoteSpace
 A simple web-based polling/voting application built for the DevOps Engineering module.
 
 ## Tech Stack
