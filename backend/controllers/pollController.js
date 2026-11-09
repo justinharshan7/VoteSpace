@@ -4,6 +4,7 @@ exports.createPoll = async (req, res) => {
   try {
     const { question, options } = req.body;
     const poll = await Poll.create({
+      createdBy: req.userId,
       question,
       options: options.map(text => ({ text, votes: 0 }))
     });
@@ -33,5 +34,16 @@ exports.vote = async (req, res) => {
     res.json(poll);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getMyPolls = async (req, res) => {
+  try {
+    const polls = await Poll.find({ createdBy: req.userId })
+      .select('question options createdAt')
+      .sort({ createdAt: -1 });
+    res.json(polls);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load your polls' });
   }
 };
