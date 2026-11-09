@@ -1,0 +1,32 @@
+.friend-panel {
+  box-sizing: border-box;
+  width: calc(100% - 40px);
+  max-width: 740px;
+  margin: 0 auto 24px;
+  padding: 24px;
+  border-radius: 16px;
+  background: #fff;
+  color: #065F46;
+  box-shadow: 0 10px 25px rgba(0,0,0,.15);
+}
+.friend-panel h2 { margin-top: 0; font-size: 22px; }
+.friend-poll { border-top: 1px solid #D1FAE5; padding: 16px 0; }
+.friend-poll h3 { overflow-wrap: anywhere; }
+.friend-button {
+  display: inline-block; border: 0; border-radius: 8px;
+  background: #10B981; color: white; padding: 10px 14px;
+  font: inherit; cursor: pointer; text-decoration: none;
+  margin: 4px 8px 4px 0;
+}
+.friend-button:disabled { opacity: .6; cursor: wait; }
+.friend-button:focus-visible { outline: 3px solid #065F46; }
+.friend-share { margin-top: 12px; padding: 14px;
+  background: #F0FDF9; border-radius: 10px; }
+.friend-share input { box-sizing: border-box; width: 100%;
+  padding: 10px; border: 1px solid #D1FAE5; border-radius: 6px; }
+.friend-share img { display: block; width: 200px;
+  max-width: 100%; height: auto; margin: 10px 0; }
+.friend-error { color: #B91C1C; }
+@media (max-width: 480px) {
+  .friend-panel { padding: 16px; }
+}

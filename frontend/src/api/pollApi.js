@@ -32,3 +32,11 @@ export const loginUser = async (username, password) => {
   const response = await axios.post(`${API_BASE}/auth/login`, { username, password });
   return response.data;
 };
+
+export const getMyPolls = async () => {
+  const token = localStorage.getItem('token');
+  const response = await axios.get(`${API_URL}/mine`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
