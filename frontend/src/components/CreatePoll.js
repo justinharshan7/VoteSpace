@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createPoll } from '../api/pollApi';
+import PollShare from './PollShare';
 
 function CreatePoll() {
   const [question, setQuestion] = useState('');
@@ -67,20 +68,7 @@ function CreatePoll() {
 
         {error && <p style={styles.error}>{error}</p>}
 
-        {pollLink && (
-          <div style={styles.linkBox}>
-            <p style={styles.linkLabel}>Share this link:</p>
-            <div style={styles.linkRow}>
-              <input type="text" readOnly value={pollLink} style={styles.linkInput} />
-              <button
-                onClick={() => navigator.clipboard.writeText(pollLink)}
-                style={styles.copyBtn}
-              >
-                Copy
-              </button>
-            </div>
-          </div>
-        )}
+        {pollLink && <PollShare url={pollLink} />}
       </div>
     </div>
   );

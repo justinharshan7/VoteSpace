@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AuthForm from './components/Login';
 import CreatePoll from './components/CreatePoll';
 import VotingPage from './components/VotingPage';
+import MyPolls from './components/MyPolls';
 
 function Home() {
   const [username, setUsername] = useState(localStorage.getItem('username'));
@@ -46,6 +47,7 @@ function Home() {
         </button>
       </div>
       <CreatePoll />
+      <MyPolls />
     </div>
   );
 }
