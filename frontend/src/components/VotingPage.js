@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { getPoll, votePoll } from '../api/pollApi';
 
@@ -8,26 +8,70 @@ function VotingPage() {
   const [voted, setVoted] = useState(false);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [sending, setSending] = useState(false);
+  const votePending = useRef(false);
+  const revision = useRef(0);
 
   useEffect(() => {
-    getPoll(id)
-      .then(setPoll)
-      .catch(() => setError('Poll not found'));
+    let active = true;
+    let timer;
+    const refresh = async () => {
+      const startedAtRevision = revision.current;
+      try {
+        if (!votePending.current) {
+          const updated = await getPoll(id);
+          if (active && !votePending.current &&
+              startedAtRevision === revision.current) {
+            setPoll(updated);
+            setLastUpdated(new Date());
+            setError('');
+          }
+        }
+      } catch (err) {
+        if (active && !votePending.current &&
+            startedAtRevision === revision.current) {
+          setError(err.response?.status === 404
+            ? 'Poll not found.'
+            : 'Connection lost. Retrying automatically...');
+        }
+      } finally {
+        if (active) timer = setTimeout(refresh, 3000);
+      }
+    };
+    refresh();
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [id]);
 
   const handleVote = async (optionIndex) => {
+    if (votePending.current || voted) return;
+    votePending.current = true;
+    revision.current += 1;
+    setSending(true);
+    setError('');
     try {
       const updated = await votePoll(id, optionIndex);
       setPoll(updated);
       setSelected(optionIndex);
       setVoted(true);
+      setLastUpdated(new Date());
     } catch (err) {
-      setError('Failed to vote');
+      setError('Vote failed. Check the results before retrying.');
+    } finally {
+      votePending.current = false;
+      setSending(false);
     }
   };
 
-  if (error) return <p style={{ color: 'red', textAlign: 'center', marginTop: '40px' }}>{error}</p>;
-  if (!poll) return <p style={{ textAlign: 'center', marginTop: '40px' }}>Loading...</p>;
+  if (!poll) {
+    return <p role="status" style={{ textAlign: 'center',
+      marginTop: '40px', color: '#065F46' }}>
+      {error || 'Loading poll...'}
+    </p>;
+  }
 
   const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
 
@@ -44,15 +88,26 @@ function VotingPage() {
       <p style={{ fontSize: '13px', color: '#888', margin: '0 0 4px' }}>Poll</p>
       <h2 style={{ fontSize: '18px', margin: '0 0 20px', color: '#111' }}>{poll.question}</h2>
 
+      <p role="status" style={{ color: '#065F46', fontSize: '13px' }}>
+        Live Results - updates every 3 seconds
+        {lastUpdated && ` | ${lastUpdated.toLocaleTimeString()}`}
+      </p>
+      {error && <p role="alert" style={{ color: '#B91C1C' }}>
+        {error}
+      </p>}
+      {sending && <p role="status">Sending vote...</p>}
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {poll.options.map((opt, index) => {
           const percent = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
           const isSelected = selected === index;
 
           return (
-            <div
-              key={index}
-              onClick={() => !voted && handleVote(index)}
+            <button
+              key={opt._id || index}
+              type="button"
+              disabled={voted || sending}
+              onClick={() => handleVote(index)}
               style={{
                 position: 'relative',
                 height: '44px',
@@ -60,18 +115,22 @@ function VotingPage() {
                 overflow: 'hidden',
                 border: '1px solid #e0e0e0',
                 background: '#f3f4f6',
-                cursor: voted ? 'default' : 'pointer'
+                width: '100%',
+                padding: 0,
+                textAlign: 'left',
+                fontFamily: 'inherit',
+                color: '#111',
+                opacity: 1,
+                cursor: voted || sending ? 'default' : 'pointer'
               }}
             >
-              {voted && (
-                <div style={{
-                  position: 'absolute',
-                  left: 0, top: 0, bottom: 0,
-                  width: `${percent}%`,
-                  background: isSelected ? '#10B981' : '#A7F3D0',
-                  transition: 'width 0.6s ease-out'
-                }} />
-              )}
+              <div style={{
+                position: 'absolute',
+                left: 0, top: 0, bottom: 0,
+                width: `${percent}%`,
+                background: isSelected ? '#10B981' : '#A7F3D0',
+                transition: 'width 0.6s ease-out'
+              }} />
               <div style={{
                 position: 'relative',
                 display: 'flex',
@@ -84,18 +143,16 @@ function VotingPage() {
                 color: '#111'
               }}>
                 <span>{isSelected && '✓ '}{opt.text}</span>
-                {voted && <span>{percent}%</span>}
+                <span>{opt.votes} votes ({percent}%)</span>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
 
-      {voted && (
-        <p style={{ textAlign: 'center', fontSize: '12px', color: '#888', marginTop: '16px' }}>
-          {totalVotes} vote{totalVotes !== 1 ? 's' : ''}
-        </p>
-      )}
+      <p style={{ textAlign: 'center', fontSize: '12px', color: '#888', marginTop: '16px' }}>
+        {totalVotes} vote{totalVotes !== 1 ? 's' : ''}
+      </p>
     </div>
   );
 }

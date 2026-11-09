@@ -14,7 +14,9 @@ export const createPoll = async (question, options) => {
 };
 
 export const getPoll = async (id) => {
-  const response = await axios.get(`${API_URL}/${id}`);
+  const response = await axios.get(`${API_URL}/${id}`, {
+    timeout: 10000
+  });
   return response.data;
 };
 
