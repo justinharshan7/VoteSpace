@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+const API_BASE = `http://${window.location.hostname}:5000`;
+
 function AuthForm({ onLogin }) {
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({ username: '', password: '' });
@@ -18,7 +20,7 @@ function AuthForm({ onLogin }) {
         const endpoint = isLogin ? '/auth/login' : '/auth/register';
 
         try {
-            const res = await fetch(`http://localhost:5000${endpoint}`, {
+            const res = await fetch(`${API_BASE}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
